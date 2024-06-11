@@ -14,6 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup
 from datetime import datetime
+from pytz import timezone
 
 
 # HTMLから株価データを抽出する関数
@@ -55,15 +56,22 @@ def get_stock_value(driver, url):
     # グラフの横幅を定義する
     width = graph.rect["width"]
 
+    # 株価データを格納するリストを定義
+    stock_data = []
+
     for i in range(width):
+    # for i in range(10):
         # 株価データを抽出する
-        data = extract_stock_data(driver.page_source)
-        print(data)
+        stock_data.append(extract_stock_data(driver.page_source))
+        # print(stock_data)
 
         # マウスを左に移動させる
         actions = ActionChains(driver)
         actions.move_by_offset(-1, 0)
         actions.perform()
+
+    return stock_data
+
 
 # 株価データを抽出する
 chrome_options = webdriver.ChromeOptions()
@@ -74,5 +82,35 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_driver = webdriver.Chrome(options=chrome_options)
 #chrome_driver.get("https://www.nikkei.com/markets/worldidx/chart/nk225/?type=6month")
 
-get_stock_value(chrome_driver, "https://www.nikkei.com/markets/worldidx/chart/nk225/?type=6month")
+# 開始時間の取得
+start_time = datetime.now()
+start_time = start_time.astimezone(timezone("Asia/Tokyo"))
+start_time = start_time.replace(tzinfo=None)
+# print(start_time)
+
+# 株価データの取得
+stock_data = get_stock_value(chrome_driver, "https://www.nikkei.com/markets/worldidx/chart/nk225/?type=6month")
+
+# 終了時間の取得
+end_time = datetime.now()
+end_time = end_time.astimezone(timezone("Asia/Tokyo"))
+end_time = end_time.replace(tzinfo=None)
+# print(end_time)
+
+# 処理にかかった時間の取得
+total_time = end_time - start_time
+total_time_sec = total_time.total_seconds()
+total_time_int = int(total_time_sec)
+
+# print(total_time)
+
+# 結果の出力
+print(f"開始時間： {start_time.replace(microsecond=0)}")
+print(f"終了時間： {end_time.replace(microsecond=0)}")
+print(f"スクレイピングにかかった時間: {total_time_int}秒")
+
+print("取得した株価データ")
+
+for data in stock_data:
+    print(data)
 
